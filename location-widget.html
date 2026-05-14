@@ -333,10 +333,12 @@
       }
     });
 
-    // Listen for changes to the submitLocation hidden field
-    JFCustomWidget.subscribe("change", function (data) {
-      if (data && data.name === "submitLocation" && data.value) {
-        prepopulate(data.value);
+    // ─── Listen for prefill message from JotForm page ────────────────
+    // This receives the submitLocation URL parameter passed via
+    // injected JavaScript on the JotForm form page.
+    window.addEventListener("message", function (event) {
+      if (event.data && event.data.type === "prefillLocation" && event.data.value) {
+        prepopulate(event.data.value);
       }
     });
 
