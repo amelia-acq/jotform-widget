@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Location Selector</title>
+  <script src="//js.jotform.com/JotFormCustomWidget.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #333;
+      background: transparent;
+      padding: 4px 0;
+    }
+
+    .selector-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #333;
+      background: #fff;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #0075e2;
+      box-shadow: 0 0 0 2px rgba(0,117,226,0.15);
+    }
+
+    select:disabled {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    .selected-value {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #555;
+      min-height: 18px;
+    }
+
+    .selected-value span {
+      font-weight: 600;
+      color: #0075e2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="selector-row">
+    <div class="selector-group">
+      <label for="building">Building</label>
+      <select id="building">
+        <option value="">— Select building —</option>
+      </select>
+    </div>
+    <div class="selector-group">
+      <label for="level">Level</label>
+      <select id="level" disabled>
+        <option value="">— Select level —</option>
+      </select>
+    </div>
+    <div class="selector-group">
+      <label for="area">Area</label>
+      <select id="area" disabled>
+        <option value="">— Select area —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="selected-value" id="selectedDisplay"></div>
+
+  <script>
+    // ─── Location Data ───────────────────────────────────────────────
+    const locations = {
+      "Mitchell House": {
+        "Whole Building": [
+          "Lift 1 - North",
+          "Lift 2 - South"
+        ],
+        "Ground": [
+          "Fast IMart (273 Elizabeth St)",
+          "China Bar (275-277 Elizabeth St)",
+          "Noodle Villa (279-281 Elizabeth St)",
+          "Xing Fu Tang (350 Lonsdale St)",
+          "Space Light (352 Lonsdale St)",
+          "Shaver Shop (354 Lonsdale St)",
+          "Market Lane Coffee (356 Lonsdale St)",
+          "Lobby",
+          "Security Room",
+          "Stairwell",
+          "Fire Stairs",
+          "Female Toilet",
+          "Male Toilet",
+          "Laneway"
+        ],
+        "Level 1": [
+          "M2 Lash Boutique (Suite M1.01)",
+          "Off the Top of My Head (Suite M1.02)",
+          "A Friend of Mine (Suite M1.03)",
+          "Hortenzia (Suite M1.04)",
+          "In Addition (Suite M1.05)",
+          "Rocksteady Records (Suite M1.06)",
+          "Rocksteady Records (Suite M1.07)",
+          "Lobby/Corridor",
+          "Stairwell",
+          "Fire Stairs",
+          "Female Toilet"
+        ],
+        "Level 2": [
+          "Meikai Chinese Therapy (M2.01)",
+          "iCare Property (M2.02)",
+          "Clements Family Law (M2.03)",
+          "Vacant (M2.04)",
+          "Hofstede Design (M2.05)",
+          "Lobby/Corridor",
+          "Fire Stairs East",
+          "Fire Stairs West",
+          "Male Toilet",
+          "Main Stairs"
+        ],
+        "Level 3": [
+          "LOOKSEOULITE (Suite M3.01)",
+          "Jon Baines Tours (Suite M3.02)",
+          "I am Temple Saint (Suite M3.03)",
+          "Boon CTK (Suite M3.04)",
+          "FMD Architecture (Suite M3.05)",
+          "Lobby/Corridor",
+          "Fire Stairs East",
+          "Fire Stairs West",
+          "Female Toilet"
+        ],
+        "Level 4": [
+          "QBag (Suite M4.01)",
+          "Nicole Cullinan Creative (Suite M4.02)",
+          "Elite Hair & Make Up (Suite M4.03)",
+          "Boom Tattoo Studio (Suite M4.04)",
+          "Vacant (Suite M4.05)",
+          "Sogo Sogo (Suite M4.06)",
+          "Lobby/Corridor",
+          "Fire Stairs East",
+          "Fire Stairs West",
+          "Female Toilet",
+          "Main Stairs"
+        ],
+        "Level 5": [
+          "Bastion Legal (Suite M5.01)",
+          "Vintech (Suite M5.02)",
+          "Antarctica Architects (Suite M5.03)",
+          "Multiple offices (Suite M5.04)",
+          "TRiC Studio (Suite M5.05)",
+          "Studio of Design and Art (Suite M5.06)",
+          "Lobby/Corridor",
+          "Fire Stairs East",
+          "Fire Stairs West"
+        ],
+        "Roof": [
+          "Shaver Shop Storage (Store)"
+        ]
+      },
+      "360 Lonsdale": {
+        "Ground": [
+          "Australian Diamond Company (360-362 Lonsdale St)"
+        ],
+        "Level 1": [
+          "Vacant (Suite A1.01)",
+          "Vacant (Suite A1.02)",
+          "Lobby",
+          "WC",
+          "Female Toilet",
+          "Male Toilet",
+          "Fire Stairs"
+        ],
+        "Level 2": [
+          "Vacant (A2.01)",
+          "Female Toilet",
+          "Male Toilet"
+        ],
+        "Level 3": [
+          "Lat Studios (Suite A3.01)",
+          "Male Toilet",
+          "Female Toilet",
+          "Fire Stairs"
+        ],
+        "Level 4": [
+          "Caroline Chisholm (Suite A4.01)",
+          "Female Toilet",
+          "Male Toilet",
+          "Fire Stairs"
+        ]
+      }
+    };
+
+    // ─── DOM Elements ────────────────────────────────────────────────
+    const buildingEl = document.getElementById("building");
+    const levelEl    = document.getElementById("level");
+    const areaEl     = document.getElementById("area");
+    const displayEl  = document.getElementById("selectedDisplay");
+
+    // ─── Populate Buildings ──────────────────────────────────────────
+    Object.keys(locations).forEach(b => {
+      buildingEl.add(new Option(b, b));
+    });
+
+    // ─── Cascade: Building → Level ───────────────────────────────────
+    buildingEl.addEventListener("change", function () {
+      const building = this.value;
+      levelEl.innerHTML = "<option value=''>— Select level —</option>";
+      areaEl.innerHTML  = "<option value=''>— Select area —</option>";
+      levelEl.disabled  = true;
+      areaEl.disabled   = true;
+      displayEl.innerHTML = "";
+      sendValue("");
+
+      if (building && locations[building]) {
+        Object.keys(locations[building]).forEach(l => {
+          levelEl.add(new Option(l, l));
+        });
+        levelEl.disabled = false;
+      }
+    });
+
+    // ─── Cascade: Level → Area ───────────────────────────────────────
+    levelEl.addEventListener("change", function () {
+      const building = buildingEl.value;
+      const level    = this.value;
+      areaEl.innerHTML = "<option value=''>— Select area —</option>";
+      areaEl.disabled  = true;
+      displayEl.innerHTML = "";
+      sendValue("");
+
+      if (building && level && locations[building][level]) {
+        locations[building][level].forEach(a => {
+          areaEl.add(new Option(a, a));
+        });
+        areaEl.disabled = false;
+      }
+    });
+
+    // ─── Area Selection → Send to JotForm ────────────────────────────
+    areaEl.addEventListener("change", function () {
+      const building = buildingEl.value;
+      const level    = levelEl.value;
+      const area     = this.value;
+
+      if (building && level && area) {
+        const combined = building + " | " + level + " | " + area;
+        displayEl.innerHTML = "Selected: <span>" + combined + "</span>";
+        sendValue(combined);
+      } else {
+        displayEl.innerHTML = "";
+        sendValue("");
+      }
+    });
+
+    // ─── Send value to JotForm ───────────────────────────────────────
+    function sendValue(val) {
+      JFCustomWidget.sendData({ value: val });
+    }
+
+    // ─── Prepopulate from submitLocation field ───────────────────────
+    function prepopulate(value) {
+      if (!value) return;
+      // Expected format: "Building | Level | Area"
+      const parts = value.split("|").map(s => s.trim());
+      if (parts.length !== 3) return;
+
+      const [building, level, area] = parts;
+
+      // Set building
+      if (locations[building]) {
+        buildingEl.value = building;
+        buildingEl.dispatchEvent(new Event("change"));
+
+        // Set level (after building populates level options)
+        if (locations[building][level]) {
+          levelEl.value = level;
+          levelEl.dispatchEvent(new Event("change"));
+
+          // Set area (after level populates area options)
+          const matchingArea = locations[building][level].find(a => a === area);
+          if (matchingArea) {
+            areaEl.value = area;
+            areaEl.dispatchEvent(new Event("change"));
+          }
+        }
+      }
+    }
+
+    // ─── JotForm Widget API ──────────────────────────────────────────
+    JFCustomWidget.subscribe("ready", function () {
+      // Try to get prefilled value from widget's own stored value
+      var existingValue = JFCustomWidget.getValue();
+      if (existingValue && existingValue.value) {
+        prepopulate(existingValue.value);
+      }
+    });
+
+    // Listen for changes to the submitLocation hidden field
+    JFCustomWidget.subscribe("change", function (data) {
+      if (data && data.name === "submitLocation" && data.value) {
+        prepopulate(data.value);
+      }
+    });
+
+  </script>
+</body>
+</html>
