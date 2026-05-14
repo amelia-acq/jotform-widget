@@ -326,21 +326,38 @@
 
     // ─── JotForm Widget API ──────────────────────────────────────────
     JFCustomWidget.subscribe("ready", function () {
-      // Try to get prefilled value from widget's own stored value
+      // 1. Try widget's own stored value (e.g. from a previous submission)
       var existingValue = JFCustomWidget.getValue();
       if (existingValue && existingValue.value) {
         prepopulate(existingValue.value);
+        return;
       }
+
+      // 2. Try reading from localStorage (set by go.html redirect page)
+      tryPrefillFromStorage();
     });
 
-    // ─── Listen for prefill message from JotForm page ────────────────
-    // This receives the submitLocation URL parameter passed via
-    // injected JavaScript on the JotForm form page.
-    window.addEventListener("message", function (event) {
-      if (event.data && event.data.type === "prefillLocation" && event.data.value) {
-        prepopulate(event.data.value);
+    // ─── Read prefill value from localStorage ────────────────────────
+    function tryPrefillFromStorage() {
+      try {
+        var storedValue = localStorage.getItem("prefillLocation");
+        var storedTime  = localStorage.getItem("prefillLocationTime");
+
+        if (storedValue) {
+          // Only use the stored value if it was set within the last 5 minutes
+          // This prevents stale values from a previous QR scan pre-filling a new form
+          var ageMs = Date.now() - parseInt(storedTime || "0", 10);
+          if (ageMs < 5 * 60 * 1000) {
+            prepopulate(storedValue);
+            // Clear after use so it doesn't persist to future form opens
+            localStorage.removeItem("prefillLocation");
+            localStorage.removeItem("prefillLocationTime");
+          }
+        }
+      } catch (e) {
+        // localStorage unavailable (e.g. private browsing in some browsers)
       }
-    });
+    }
 
   </script>
 </body>
